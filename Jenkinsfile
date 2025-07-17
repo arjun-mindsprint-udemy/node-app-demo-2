@@ -124,6 +124,29 @@ pipeline {
         }
     }
 
+    stage('Post-deployment Health Check') {
+        steps {
+            script {
+            def app_name = env.APP_NAME
+            def app_env = env.APP_ENV
+            
+            // Start port-forward in background
+            bat """
+            echo Starting port-forward in background...
+            start /MIN wsl kubectl port-forward svc/${app_name} -n ${app_env} 8080:5000
+            timeout /t 10 >nul
+            """
+            
+            // Wait for pod to be ready
+            bat """
+            echo Checking health endpoint...
+            curl -f http://localhost:8080/health || exit /b 1
+            """
+            }
+        }
+    }
+
+
     post {
         always {
             echo 'Jenkins Pipeline Complete'
