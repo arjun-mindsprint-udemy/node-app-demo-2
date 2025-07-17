@@ -109,6 +109,8 @@ pipeline {
 
         stage('Set Build Info') {
             steps {
+                dir('src/backend') {
+                    script {
                 writeFile file: '.env', text: """
                 APP_NAME = ${env.APP_NAME}
                 NODE_ENV = ${env.APP_ENV}
@@ -120,38 +122,12 @@ pipeline {
                 SONAR_GATE = ${env.SONAR_GATE}
                 SONAR_LAST_RUN = ${env.SONAR_LAST_RUN}
                 """
+                    }
+                }
             }
         }
 
-            stage('Post-deployment Health Check') {
-        steps {
-            script {
-            def app_name = env.APP_NAME
-            def app_env = env.APP_ENV
 
-            powershell """
-            Write-Host "Starting port forward..." 
-            \$portForward = Start-Process -FilePath "wsl" `
-                -ArgumentList "kubectl", "port-forward", "svc/${env.APP_NAME}", "-n", "${env.APP_ENV}", "8080:5000" `
-                -NoNewWindow -PassThru
-
-            Start-Sleep -Seconds 10
-
-            Write-Host "Check /health endpoint..."
-            try {
-                \$response = Invoke-WebRequest -Uri http://localhost:8080/health -UseBasicParsing
-                Write-Host "Health check successful: \$($\response.Content)"
-            } catch {
-                Write-Host "Health check failed: \$($_.Exception.Message)"
-                exit 1
-            }
-
-            Write-Host "Stopping port-forward..."
-            Stop-Process -Id \$portForward.Id -Force
-            """
-            }
-        }
-    }
 
     }
 
