@@ -120,11 +120,13 @@ pipeline {
             }
         }
 
-            stage('Post-deployment Health Check') {
+            stage('Post-deployment Health Check & ZAP DAST Scan') {
             steps {
                 script {
                 def app_name = env.APP_NAME
                 def app_env = env.APP_ENV
+                def target = 'http://host.docker.internal:8080'
+                def reportPath = 'scan-report.html'
     
                 powershell '''
                 Write-Host "Starting port forward..." 
@@ -142,24 +144,16 @@ pipeline {
                     Write-Host "Health check failed: $($_.Exception.Message)"
                     exit 1
                 }
+
+                echo Running OWASP ZAP DAST scan...
+                docker run -v ${PWD}:/zap/wrk/:rw zaproxy/zap-stable zap-baseline.py -t http://host.docker.internal:8080 -r scan-report.html
+
+                Write-Host "Stopping port-forward..."
+                Stop-Process -Id $portForward.Id -Force            
                 '''
                 }
             }
     }
-
-        stage('ZAP DAST Scan') {
-            steps {
-                script {
-                def target = 'http://host.docker.internal:8080'
-                def reportPath = 'scan-report.html'
-                
-                bat """
-                echo Running OWASP ZAP DAST scan...
-                docker run -v ${PWD}:/zap/wrk/:rw zaproxy/zap-stable zap-baseline.py -t http://host.docker.internal:8080 -r scan-report.html
-                """
-                }
-                }
-            }
         
         stage('Open ZAP Report') {
         steps {
