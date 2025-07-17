@@ -122,9 +122,8 @@ pipeline {
                 """
             }
         }
-    }
 
-    stage('Post-deployment Health Check') {
+            stage('Post-deployment Health Check') {
         steps {
             script {
             def app_name = env.APP_NAME
@@ -145,6 +144,9 @@ pipeline {
             }
         }
     }
+
+    }
+
 
 
     post {
