@@ -140,13 +140,14 @@ pipeline {
                 try {
                     $response = Invoke-WebRequest -Uri http://localhost:8080/health -UseBasicParsing
                     Write-Host "Health check successful: $($response.Content)"
+                    echo Running OWASP ZAP DAST scan...
+                    docker run -v ${PWD}:/zap/wrk/:rw zaproxy/zap-stable zap-baseline.py -t http://host.docker.internal:8080 -r scan-report.html
                 } catch {
                     Write-Host "Health check failed: $($_.Exception.Message)"
                     exit 1
                 }
 
-                echo Running OWASP ZAP DAST scan...
-                docker run -v ${PWD}:/zap/wrk/:rw zaproxy/zap-stable zap-baseline.py -t http://host.docker.internal:8080 -r scan-report.html
+
 
                 Write-Host "Stopping port-forward..."
                 Stop-Process -Id $portForward.Id -Force            
