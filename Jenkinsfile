@@ -140,9 +140,9 @@ pipeline {
             Write-Host "Check /health endpoint..."
             try {
                 $response = Invoke-WebRequest -Uri http://localhost:8080/health -UseBasicParsing
-                Write-Host "Health check successful: ${$response.Content}"
+                Write-Host "Health check successful: $($response.Content)"
             } catch {
-                Write-Host "Health check failed": $($_.Exception.Message)"
+                Write-Host "Health check failed: $($_.Exception.Message)"
                 exit 1
             }
 
