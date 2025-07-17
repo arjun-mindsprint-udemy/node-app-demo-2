@@ -41,6 +41,23 @@ pipeline {
             }
         }
 
+                stage('Set Build Info') {
+            steps {
+                dir('src/backend') {
+                    script {
+                writeFile file: '.env', text: """
+                APP_NAME = ${env.APP_NAME}
+                NODE_ENV = ${env.APP_ENV}
+                COMMIT_ID = ${env.COMMIT_ID}
+                BUILD_TIME= ${env.BUILD_TIME}
+                SONAR_GATE = ${env.SONAR_GATE}
+                SONAR_LAST_RUN = ${env.SONAR_LAST_RUN}
+                """
+                    }
+                }
+            }
+        }
+
         stage('Login to Docker Hub') {
             steps {
                 bat '''
@@ -86,9 +103,6 @@ pipeline {
             steps {
                 script {
                     def trivyStatus = bat(script: 'trivy image arjun150800/%APP_NAME%:%COMMIT_ID%', returnStatus: true)
-                    env.TRIVY_STATUS = (trivyStatus == 0) ? 'PASS' : 'FAIL'
-                    env.TRIVY_LAST_RUN = new Date().format("yyyy-MM-dd'T'HH:mm:ss")
-                    env.TRIVY_VULNS = '3'
                 }
             }
         }
@@ -107,25 +121,7 @@ pipeline {
         }
 
 
-        stage('Set Build Info') {
-            steps {
-                dir('src/backend') {
-                    script {
-                writeFile file: '.env', text: """
-                APP_NAME = ${env.APP_NAME}
-                NODE_ENV = ${env.APP_ENV}
-                COMMIT_ID = ${env.COMMIT_ID}
-                BUILD_TIME= ${env.BUILD_TIME}
-                TRIVY_STATUS = ${env.TRIVY_STATUS}
-                TRIVY_LAST_RUN = ${env.TRIVY_LAST_RUN}
-                TRIVY_VULNS = ${env.TRIVY_VULNS}
-                SONAR_GATE = ${env.SONAR_GATE}
-                SONAR_LAST_RUN = ${env.SONAR_LAST_RUN}
-                """
-                    }
-                }
-            }
-        }
+
 
 
 
