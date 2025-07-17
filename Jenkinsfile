@@ -120,34 +120,33 @@ pipeline {
             }
         }
 
-        stage('Post-deployment Health Check') {
-            steps {
-                script {
-                def app_name = env.APP_NAME
-                def app_env = env.APP_ENV
-    
-                powershell """
-                Write-Host "Starting port forward..." 
-                \$portForward = Start-Process -FilePath "wsl" `
-                    -ArgumentList "kubectl", "port-forward", "svc/node-app-demo-2", "-n", "env", "8080:5000" `
-                    -NoNewWindow -PassThru
-    
-                Start-Sleep -Seconds 10
-    
-                Write-Host "Check /health endpoint..."
-                try {
-                    \$response = Invoke-WebRequest -Uri http://localhost:8080/health -UseBasicParsing
-                    Write-Host "Health check successful: \$($\response.Content)"
-                } catch {
-                    Write-Host "Health check failed: \$($_.Exception.Message)"
-                    exit 1
-                }
+            stage('Post-deployment Health Check') {
+        steps {
+            script {
+            def app_name = env.APP_NAME
+            def app_env = env.APP_ENV
 
-                """
-                }
+            powershell '''
+            Write-Host "Starting port forward..." 
+            $portForward = Start-Process -FilePath "wsl" `
+                -ArgumentList "kubectl", "port-forward", "svc/node-app-demo-2", "-n", "dev", "8080:5000" `
+                -NoNewWindow -PassThru
+
+            Start-Sleep -Seconds 10
+
+            Write-Host "Check /health endpoint..."
+            try {
+                $response = Invoke-WebRequest -Uri http://localhost:8080/health -UseBasicParsing
+                Write-Host "Health check successful: $($response.Content)"
+            } catch {
+                Write-Host "Health check failed: $($_.Exception.Message)"
+                exit 1
             }
-    }
 
+            '''
+            }
+        }
+    }
 
         stage('ZAP DAST Scan') {
             steps {
