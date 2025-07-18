@@ -153,8 +153,12 @@ pipeline {
                     Write-Host "ZAP scan encountered a non-critical error: $($_.Exception.Message)"
                     # Do not exit 1 here - continue the build
                 }
-                Write-Host "Stopping port-forward..."
-                Stop-Process -Id $portForward.Id -Force            
+                if (Get-Process -Id $portForward.Id -ErrorAction SilentlyContinue) {
+                    Write-Host "Stopping port-forward..."
+                    Stop-Process -Id $portForward.Id -Force
+                } else {
+                    Write-Host "Port-forward process already exited."
+                }
                 '''
                 }
             }
