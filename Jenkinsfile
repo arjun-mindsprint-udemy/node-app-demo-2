@@ -127,7 +127,9 @@ pipeline {
                 def app_env = env.APP_ENV
                 def target = 'http://host.docker.internal:8080'
                 def reportPath = 'scan-report.html'
-    
+
+                
+                catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE'){   
                 powershell '''
                 Write-Host "Starting port forward..." 
                 $portForward = Start-Process -FilePath "wsl" `
@@ -160,6 +162,7 @@ pipeline {
                     Write-Host "Port-forward process already exited."
                 }
                 '''
+                }
                 }
             }
     }
